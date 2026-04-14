@@ -10,7 +10,7 @@ tokenizer= 'gpt2'
 
 
 [model]
-embd_dim = 256
+n_embd = 256
 hidden_dim = 512
 num_layers = 6
 num_heads = 4

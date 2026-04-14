@@ -22,7 +22,7 @@ class DataConfig(BaseModel):
 class ModelConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    embd_dim: int = Field(gt=0)
+    n_embd: int = Field(gt=0)
     hidden_dim: int = Field(gt=0)
     num_layers: int = Field(gt=0)
     num_heads: int = Field(gt=0)
