@@ -1,0 +1,37 @@
+[project]
+name= 'Text_diffusion'
+seed = 1008
+
+[data]
+dataset = 'roneneldan/tinystories'
+batch_size = 32
+block_size = 256
+tokenizer= 'gpt2'
+
+
+[model]
+embd_dim = 256
+hidden_dim = 512
+num_layers = 6
+num_heads = 4
+time_embd = 256
+dropout = 0.1
+
+[training]
+lr = 3e-4
+max_steps = 40000
+betas =[0.9, 0.95]
+grad_clip = 1.0
+weight_decay = 0.1
+warmup_steps = 1000
+eval_interval = 500
+save_interval=500
+scheduler = 'cosine'
+
+[diffusion]
+timesteps = 500
+beta_schedule = 'linear'
+beta_start = 0.0001
+beta_end = 0.02
+
+
