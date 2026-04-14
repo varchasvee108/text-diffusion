@@ -1,0 +1,90 @@
+# ======================================================
+# Python / Runtime
+# ======================================================
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+
+# ======================================================
+# Virtual Environments & Env Files
+# ======================================================
+.env
+.env.*
+.venv/
+venv/
+env/
+
+# ======================================================
+# Experiments / Training Artifacts (LOCAL ONLY)
+# ======================================================
+experiments/*
+!experiments/.gitkeep
+
+# Checkpoints, logs, metrics
+runs/
+logs/
+tensorboard/
+tb_logs/
+
+# ======================================================
+# Weights / Models (DO NOT COMMIT)
+# ======================================================
+*.pth
+*.pt
+*.ckpt
+*.bin
+*.h5
+*.onnx
+
+# ======================================================
+# Data (Reproducible via scripts, not git)
+# ======================================================
+data/raw/*
+!data/raw/.gitkeep
+
+data/datasets/*
+data/splits/*
+!data/splits/.gitkeep
+data/cache/*
+outputs/*
+!outputs/**/.gitkeep
+
+# Audio / Feature caches
+*.wav
+*.flac
+*.mp3
+*.npy
+*.npz
+
+# ======================================================
+# WandB (local cache only)
+# ======================================================
+wandb/
+
+# ======================================================
+# Config Overrides (keep base configs only)
+# ======================================================
+configs/local.toml
+configs/*_local.toml
+
+# ======================================================
+# IDEs / OS Junk
+# ======================================================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ======================================================
+# Build / Distribution
+# ======================================================
+build/
+dist/
+*.egg-info/
+
+# ======================================================
+# Optional: Torch / CUDA Cache
+# ======================================================
+.cache/
+torch_extensions/
