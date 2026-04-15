@@ -48,7 +48,7 @@ class TransformerBlock(nn.Module):
 
     def forward(self, x: torch.Tensor, t_emb: torch.Tensor) -> torch.Tensor:
 
-        chunks = self.adaln_mod(t_emb).chunk(6, dim=-1)
+        chunks = self.adaln_mod(t_emb).unsqueeze(1).chunk(6, dim=-1)
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = chunks
 
         x_norm = self.ln1(x)
