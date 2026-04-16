@@ -36,30 +36,26 @@ def build_scheduler(config: Config, optimizer):
     )
 
 
-def build_optimizer(config: Config, model):
-    decay = set()
-    no_decay = set()
+def build_optimizer(config, model):
 
-    for name, param in model.named_parameters():
-        if not param.requires_grad:
-            continue
+    decay_params = []
+    no_decay_params = []
 
-        if name.endswith("bias") or "ln" in name.lower() or "norm" in name.lower():
-            no_decay.add(name)
-        else:
-            decay.add(name)
+    for module_name, module in model.named_modules():
+        for param_name, param in module.named_parameters(recurse=False):
+            if not param.requires_grad:
+                continue
 
-    param_dict = {name: param for name, param in model.named_parameters()}
+            if isinstance(module, (nn.LayerNorm, nn.Embedding)):
+                no_decay_params.append(param)
+            elif param_name.endswith("bias"):
+                no_decay_params.append(param)
+            else:
+                decay_params.append(param)
 
     optim_groups = [
-        {
-            "params": [param_dict[n] for n in sorted(decay)],
-            "weight_decay": config.training.weight_decay,
-        },
-        {
-            "params": [param_dict[n] for n in sorted(no_decay)],
-            "weight_decay": 0.0,
-        },
+        {"params": decay_params, "weight_decay": config.training.weight_decay},
+        {"params": no_decay_params, "weight_decay": 0.0},
     ]
 
     return AdamW(
