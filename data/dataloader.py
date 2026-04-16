@@ -1,0 +1,33 @@
+from datasets import load_dataset
+from torch.utils.data import DataLoader
+from core.config import Config
+
+
+def build_dataloader(config: Config, tokenizer):
+    dataset = load_dataset(config.data.dataset)
+
+    def tokenize_fn(example):
+        return tokenizer(
+            example["text"],
+            truncation=True,
+            padding="max_length",
+            max_length=config.data.block_size,
+        )
+
+    tokenized = dataset.map(tokenize_fn, batched=True, remove_columns=["text"])
+
+    train_dataloader = DataLoader(
+        dataset=tokenized["train"],  # type:ignore
+        batch_size=config.data.batch_size,
+        shuffle=True,
+        num_workers=4,
+        pin_memory=True,
+    )
+
+    val_dataloader = DataLoader(
+        dataset=tokenized["validation"],  # type:ignore
+        batch_size=config.data.batch_size,
+        num_workers=4,
+        pin_memory=True,
+    )
+    return train_dataloader, val_dataloader
