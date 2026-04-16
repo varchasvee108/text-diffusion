@@ -33,9 +33,14 @@ class DiffusionModel(nn.Module):
         self.proj_out = nn.Linear(config.model.n_embd, config.model.n_embd)
 
     def forward(self, x, t):
-        B, T = x.shape
 
-        x = self.tok_embd(x) + self.pos_embd[:, :T, :]
+        if x.ndim == 2:
+            B, T = x.shape
+            x = self.tok_embd(x)
+        else:
+            B, T, C = x.shape
+
+        x = x + self.pos_embd[:, :T, :]
 
         t_emb = self.time_embd(t)  # (B, n_embd)
 
