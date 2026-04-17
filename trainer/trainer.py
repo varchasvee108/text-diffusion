@@ -11,7 +11,6 @@ from torch.optim import Optimizer
 from model.model import DiffusionModel
 from transformers import PreTrainedTokenizerBase
 from torch.utils.data import DataLoader
-from torch.optim.lr_scheduler import _LRScheduler
 
 
 class Trainer:
@@ -24,7 +23,7 @@ class Trainer:
         model: DiffusionModel,
         diffusion: Diffusion,
         optimizer: Optimizer,
-        scheduler: _LRScheduler,
+        scheduler,
         device: torch.device,
     ):
         self.config = config
