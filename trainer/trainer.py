@@ -6,12 +6,12 @@ import wandb
 import torch.nn.functional as F
 from core.config import Config
 
-# import torch.nn as nn
 from diffusion.diffusion import Diffusion
 from torch.optim import Optimizer
 from model.model import DiffusionModel
 from transformers import PreTrainedTokenizerBase
 from torch.utils.data import DataLoader
+from torch.optim.lr_scheduler import _LRScheduler
 
 
 class Trainer:
@@ -24,7 +24,7 @@ class Trainer:
         model: DiffusionModel,
         diffusion: Diffusion,
         optimizer: Optimizer,
-        scheduler,
+        scheduler: _LRScheduler,
         device: torch.device,
     ):
         self.config = config
