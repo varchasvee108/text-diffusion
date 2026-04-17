@@ -95,6 +95,7 @@ def build_trainer(config: Config):
         scheduler=scheduler,
         train_dataloader=train_dataloader,
         val_dataloader=val_dataloader,
+        tokenizer=tokenizer,
         device=device,
     )
     return trainer
