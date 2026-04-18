@@ -46,7 +46,9 @@ class TransformerBlock(nn.Module):
             nn.SiLU(), nn.Linear(config.model.n_embd, 6 * config.model.n_embd)
         )
 
-    def forward(self, x: torch.Tensor, t_emb: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, t_emb: torch.Tensor, key_padding_mask=None
+    ) -> torch.Tensor:
 
         chunks = self.adaln_mod(t_emb).unsqueeze(1).chunk(6, dim=-1)
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = chunks
@@ -54,7 +56,7 @@ class TransformerBlock(nn.Module):
         x_norm = self.ln1(x)
         x_mod = x_norm * (1 + scale_msa) + shift_msa
 
-        attn, _ = self.attn(x_mod, x_mod, x_mod)
+        attn, _ = self.attn(x_mod, x_mod, x_mod, key_padding_mask=key_padding_mask)
         x = x + gate_msa * attn
 
         x_mod = self.ln2(x) * (1 + scale_mlp) + shift_mlp
