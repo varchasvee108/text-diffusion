@@ -20,9 +20,7 @@ def get_device():
 
 def build_tokenizer(config: Config):
     tokenizer = AutoTokenizer.from_pretrained(config.data.tokenizer)
-
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.add_special_tokens({"pad_token": "[PAD]"})
 
     return tokenizer
 
@@ -68,7 +66,10 @@ def build_optimizer(config, model):
 def build_model(config: Config, tokenizer, device):
     config = config.model_copy(deep=True)
     config.data.vocab_size = len(tokenizer)
-    return DiffusionModel(config).to(device)
+
+    model = DiffusionModel(config).to(device)
+
+    return model
 
 
 def build_diffusion(config: Config, device):
