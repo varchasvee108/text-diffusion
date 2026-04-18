@@ -1,0 +1,16 @@
+[project]
+name = "text-diffusion"
+version = "0.1.0"
+description = "Text Diffusion Model"
+requires-python = ">=3.11, <3.12"
+dependencies = [
+    "torch",
+    "pydantic",
+    "tqdm",
+    "matplotlib",
+    "numpy",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
