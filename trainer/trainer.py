@@ -107,8 +107,10 @@ class Trainer:
             x0_emb = self.model.tok_embd(x0)
             noise = torch.randn_like(x0_emb)
 
-            xt = self.diffusion.add_noise_to_embeddings(x0=x0, t=t, noise=noise)
-            pred_noise = self.model(xt, t)
+            xt = self.diffusion.add_noise_to_embeddings(x0=x0_emb, t=t, noise=noise)
+            attn_mask = batch["attention_mask"].to(self.device)
+            key_padding_mask = attn_mask == 0
+            pred_noise = self.model(xt, t, key_padding_mask=key_padding_mask)
 
             loss = F.mse_loss(pred_noise, noise)
 
