@@ -3,5 +3,5 @@
 train:
 	python -m scripts.train
 
-inference:
+infer:
 	python -m scripts.infer
