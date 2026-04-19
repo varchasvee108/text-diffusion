@@ -15,13 +15,14 @@ def build_dataloader(config: Config, tokenizer):
         )
 
     tokenized = dataset.map(tokenize_fn, batched=True, remove_columns=["text"])
-
+    tokenized.set_format("torch", columns=["input_ids", "attention_mask"])
     train_dataloader = DataLoader(
         dataset=tokenized["train"],  # type:ignore
         batch_size=config.data.batch_size,
         shuffle=True,
         num_workers=4,
         pin_memory=True,
+        persistent_workers=True,
     )
 
     val_dataloader = DataLoader(
@@ -29,5 +30,6 @@ def build_dataloader(config: Config, tokenizer):
         batch_size=config.data.batch_size,
         num_workers=4,
         pin_memory=True,
+        persistent_workers=True,
     )
     return train_dataloader, val_dataloader
