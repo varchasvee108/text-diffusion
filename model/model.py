@@ -32,7 +32,7 @@ class DiffusionModel(nn.Module):
         self.ln_f = nn.LayerNorm(config.model.n_embd, elementwise_affine=False)
         self.proj_out = nn.Linear(config.model.n_embd, config.model.n_embd)
 
-    def forward(self, x, t, attn_mask=None):
+    def forward(self, x, t, key_padding_mask=None):
 
         if x.ndim == 2:
             B, T = x.shape
@@ -45,7 +45,7 @@ class DiffusionModel(nn.Module):
         t_emb = self.time_embd(t)  # (B, n_embd)
 
         for block in self.transformer_blocks:
-            x = block(x, t_emb, attn_mask)
+            x = block(x, t_emb, key_padding_mask=key_padding_mask)
 
         shift, scale = self.adaln_mod(t_emb).unsqueeze(1).chunk(2, dim=-1)
 
