@@ -42,6 +42,7 @@ class TrainingConfig(BaseModel):
     eval_interval: int = Field(gt=0)
     save_interval: int = Field(gt=0)
     scheduler: Literal["cosine", "linear", "constant"] = "cosine"
+    grad_accum_steps: int = Field(gt=0)
 
 
 class DiffusionConfig(BaseModel):

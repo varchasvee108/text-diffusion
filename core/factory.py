@@ -29,8 +29,10 @@ def build_scheduler(config: Config, optimizer):
     return get_scheduler(
         name=config.training.scheduler,
         optimizer=optimizer,
-        num_warmup_steps=config.training.warmup_steps,
-        num_training_steps=config.training.max_steps,
+        num_warmup_steps=config.training.warmup_steps
+        // config.training.grad_accum_steps,
+        num_training_steps=config.training.max_steps
+        // config.training.grad_accum_steps,
     )
 
 
