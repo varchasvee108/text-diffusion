@@ -52,7 +52,7 @@ class Trainer:
 
     def train(self):
         self.model.train()
-        pbar = tqdm(total=self.config.training.max_steps, desc="Training")
+        pbar = tqdm(range(self.config.training.max_steps), desc="Training")
 
         train_iter = iter(self.train_dataloader)
 
@@ -65,6 +65,7 @@ class Trainer:
                 batch = next(train_iter)
 
             loss = self._train_step(batch)
+            pbar.set_postfix({"train/loss": loss})
 
             self.step += 1
             pbar.update(1)
@@ -79,11 +80,15 @@ class Trainer:
         total_loss = 0.0
         num_batches = 0
         pbar = tqdm(self.val_dataloader, desc="Evaluation")
+        max_batches = int(0.3 * len(self.val_dataloader))
 
-        for batch in pbar:
+        for i, batch in enumerate(pbar):
+            if i == max_batches:
+                break
             loss = self._eval(batch)
             total_loss += loss
             num_batches += 1
+            pbar.set_postfix({"eval/loss": loss})
 
         avg_loss = total_loss / num_batches
         sample_text = self._sample_text()
@@ -99,8 +104,6 @@ class Trainer:
         x0 = batch["input_ids"].to(self.device)
         t = self.diffusion.sample_timesteps(x0.shape[0])
 
-        self.optimizer.zero_grad(set_to_none=True)
-
         with autocast(
             device_type=self.device.type, enabled=(self.device.type == "cuda")
         ):
@@ -113,15 +116,20 @@ class Trainer:
             pred_noise = self.model(xt, t, key_padding_mask=key_padding_mask)
 
             loss = F.mse_loss(pred_noise, noise)
+            loss_to_log = loss.detach()
+            loss = loss / self.config.training.grad_accum_steps
 
         self.scaler.scale(loss).backward()
-        self.scaler.unscale_(optimizer=self.optimizer)
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
-        self.scaler.step(self.optimizer)
-        self.scaler.update()
-        self.scheduler.step()
 
-        return loss.item()
+        if (self.step + 1) % self.config.training.grad_accum_steps == 0:
+            self.scaler.unscale_(optimizer=self.optimizer)
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
+            self.optimizer.zero_grad(set_to_none=True)
+            self.scheduler.step()
+
+        return loss_to_log.item()
 
     @torch.no_grad()
     def _eval(self, batch):
@@ -132,8 +140,10 @@ class Trainer:
             x0_emb = self.model.tok_embd(x0)
             noise = torch.randn_like(x0_emb)
 
-            xt = self.diffusion.add_noise_to_embeddings(x0=x0, t=t, noise=noise)
-            pred_noise = self.model(xt, t)
+            xt = self.diffusion.add_noise_to_embeddings(x0=x0_emb, t=t, noise=noise)
+            attn_mask = batch["attention_mask"].to(self.device)
+            key_padding_mask = attn_mask == 0
+            pred_noise = self.model(xt, t, key_padding_mask=key_padding_mask)
             loss = F.mse_loss(pred_noise, noise)
         return loss.item()
 
@@ -171,18 +181,20 @@ class Trainer:
                 "model": self.model.state_dict(),
                 "optimizer": self.optimizer.state_dict(),
                 "scheduler": self.scheduler.state_dict(),
+                "best_loss": self.best_loss,
             },
             last_path,
         )
         if loss < self.best_loss:
             self.best_loss = loss
-            path = Path(self.checkpoint_dir / f"ckpt_{self.step}_best-loss.pt")
+            path = Path(self.checkpoint_dir / "ckpt_best_loss.pt")
             torch.save(
                 {
                     "step": self.step,
                     "model": self.model.state_dict(),
                     "optimizer": self.optimizer.state_dict(),
                     "scheduler": self.scheduler.state_dict(),
+                    "best_loss": self.best_loss,
                 },
                 path,
             )
