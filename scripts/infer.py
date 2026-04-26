@@ -2,6 +2,9 @@ import torch
 from core.config import Config
 from core.factory import build_trainer
 from pathlib import Path
+import os
+
+os.environ["WANDB_MODE"] = "disabled"
 
 
 def main():

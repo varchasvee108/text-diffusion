@@ -3,9 +3,9 @@ name= 'Text_diffusion'
 seed = 1008
 
 [data]
-dataset = 'roneneldan/tinystories'
+dataset = 'wikitext'
 batch_size = 8
-block_size = 128
+block_size = 256
 tokenizer= 'gpt2'
 
 
@@ -18,16 +18,16 @@ time_embd = 128
 dropout = 0.1
 
 [training]
-lr = 3e-4
-max_steps = 40000
+lr = 1e-4
+max_steps = 150000
 betas =[0.9, 0.95]
 grad_clip = 1.0
-weight_decay = 0.1
+weight_decay = 0.001
 warmup_steps = 1000
 eval_interval = 500
 save_interval=500
-scheduler = 'cosine'
-grad_accum_steps= 8
+scheduler = 'cosine_with_restarts'
+grad_accum_steps= 4
 
 [diffusion]
 timesteps = 100

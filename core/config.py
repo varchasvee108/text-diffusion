@@ -41,7 +41,9 @@ class TrainingConfig(BaseModel):
     grad_clip: float = Field(gt=0.0)
     eval_interval: int = Field(gt=0)
     save_interval: int = Field(gt=0)
-    scheduler: Literal["cosine", "linear", "constant"] = "cosine"
+    scheduler: Literal["cosine", "linear", "constant", "cosine_with_restarts"] = (
+        "cosine_with_restarts"
+    )
     grad_accum_steps: int = Field(gt=0)
 
 

@@ -4,7 +4,8 @@ from core.config import Config
 
 
 def build_dataloader(config: Config, tokenizer):
-    dataset = load_dataset(config.data.dataset)
+    dataset = load_dataset(config.data.dataset, "wikitext-2-raw-v1")
+    dataset = dataset.filter(lambda x: len(x["text"].strip()) > 0)
 
     def tokenize_fn(example):
         return tokenizer(

@@ -136,7 +136,9 @@ class Trainer:
         x0 = batch["input_ids"].to(self.device)
         t = self.diffusion.sample_timesteps(x0.shape[0])
 
-        with autocast(device_type=self.device.type, enabled=(torch.device == "cuda")):
+        with autocast(
+            device_type=self.device.type, enabled=(torch.device.type == "cuda")
+        ):
             x0_emb = self.model.tok_embd(x0)
             noise = torch.randn_like(x0_emb)
 
@@ -155,7 +157,12 @@ class Trainer:
 
         logits = torch.matmul(sampled_emb, self.model.tok_embd.weight.T)
 
-        tokens = torch.argmax(logits, dim=-1)
+        temperature = 0.1
+
+        probs = torch.softmax(logits / temperature, dim=-1)
+        tokens = torch.multinomial(probs.view(-1, probs.size(-1)), 1).view(
+            logits.shape[0], logits.shape[1]
+        )
         return self.tokenizer.decode(tokens[0], skip_special_tokens=True)
 
     def _log_train(self, loss):
@@ -171,6 +178,19 @@ class Trainer:
     def _log_eval(self):
         if self.step > 0 and self.step % 500 == 0:
             self.evaluate()
+
+    @torch.no_grad()
+    def load_checkpoint(self, path):
+        ckpt = torch.load(path, map_location=self.device)
+
+        self.model.load_state_dict(ckpt["model"])
+        self.optimizer.load_state_dict(ckpt["optimizer"])
+        self.scheduler.load_state_dict(ckpt["scheduler"])
+
+        self.step = ckpt["step"]
+        self.best_loss = ckpt["best_loss"]
+
+        print(f"Resumed from step {self.step}, best_loss={self.best_loss}")
 
     def _save_checkpoint(self, loss: float):
 
