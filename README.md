@@ -14,7 +14,7 @@ This project implements a **DDPM (Denoising Diffusion Probabilistic Model)** spe
 ### Generation Process
 This video shows the model's progress as it learns to transform randomness into structured information.
 
-<video src="checkpoints/outputs/diffusion_output - Copy.mp4" controls width="100%"></video>
+<video src="checkpoints/outputs/diffusion_output - Copy.gif" controls width="100%"></video>
 
 ### Performance Tracking
 These graphs show how the system improved over time, reducing errors as it became better at identifying and reversing the noise.
