@@ -13,6 +13,35 @@ from transformers import PreTrainedTokenizerBase
 from torch.utils.data import DataLoader
 
 
+def sample_logits(logits, temperature=0.8, top_k=50, top_p=0.9):
+    logits = logits / temperature
+
+    if top_k is not None:
+        v, _ = torch.topk(logits, top_k)
+        logits[logits < v[..., -1, None]] = -float("inf")
+
+    if top_p is not None:
+        sorted_logits, sorted_indices = torch.sort(logits, descending=True)
+        probs = torch.softmax(sorted_logits, dim=-1)
+        cum_probs = torch.cumsum(probs, dim=-1)
+
+        sorted_mask = cum_probs > top_p
+        sorted_mask[..., 1:] = sorted_mask[..., :-1].clone()
+        sorted_mask[..., 0] = 0
+
+        mask = sorted_mask.scatter(1, sorted_indices, sorted_mask)
+        logits[mask] = -float("inf")
+
+    probs = torch.softmax(logits, dim=-1)
+    return torch.multinomial(probs, 1)
+
+
+def apply_repetition_penalty(logits, prev_tokens, penalty=1.2):
+    for token in prev_tokens:
+        logits[:, token] /= penalty
+    return logits
+
+
 class Trainer:
     def __init__(
         self,
@@ -157,12 +186,27 @@ class Trainer:
 
         logits = torch.matmul(sampled_emb, self.model.tok_embd.weight.T)
 
-        temperature = 0.1
+        B, T, V = logits.shape
+        tokens = []
 
-        probs = torch.softmax(logits / temperature, dim=-1)
-        tokens = torch.multinomial(probs.view(-1, probs.size(-1)), 1).view(
-            logits.shape[0], logits.shape[1]
-        )
+        for i in range(T):
+            step_logits = logits[:, i, :]
+
+            if len(tokens) > 0:
+                prev = torch.cat(tokens, dim=1)[0]
+                step_logits = apply_repetition_penalty(step_logits, prev)
+
+            sampled = sample_logits(
+                step_logits,
+                temperature=0.8,
+                top_k=50,
+                top_p=0.9,
+            )
+
+            tokens.append(sampled)
+
+        tokens = torch.cat(tokens, dim=1)
+
         return self.tokenizer.decode(tokens[0], skip_special_tokens=True)
 
     def _log_train(self, loss):
